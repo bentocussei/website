@@ -18,7 +18,7 @@ const Footer = () => {
             <div className="flex space-x-4">
               <span className="text-gray-400">Follow us:</span>
               <a
-                href="#"
+                href="https://www.linkedin.com/company/ratotecki-inc/"
                 className="text-gray-400 hover:text-white transition-colors"
                 aria-label="LinkedIn"
               >

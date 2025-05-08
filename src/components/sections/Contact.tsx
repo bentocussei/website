@@ -1,11 +1,79 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
+interface ContactFormData {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
 const Contact = () => {
   const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState<ContactFormData>({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setFormData({ ...formData, [id.replace('contact-', '')]: value });
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitError('');
+
+    try {
+      // Simple validation
+      if (!formData.name || !formData.email || !formData.message) {
+        throw new Error('Please fill in all required fields');
+      }
+
+      // Send data to API
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to submit form');
+      }
+
+      // Show success and reset form
+      setSubmitSuccess(true);
+      setFormData({
+        name: '',
+        email: '',
+        subject: '',
+        message: ''
+      });
+
+      // Close form after a delay
+      setTimeout(() => {
+        setShowForm(false);
+        setSubmitSuccess(false);
+      }, 3000);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setSubmitError(error instanceof Error ? error.message : 'An unknown error occurred');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <section id="contact" className="py-20 bg-gray-50 dark:bg-gray-900">
@@ -109,55 +177,81 @@ const Contact = () => {
                       </svg>
                     </button>
                   </div>
-                  <form className="space-y-6">
+                  <form className="space-y-6" onSubmit={handleSubmit}>
+                    {submitSuccess && (
+                      <div className="p-4 mb-4 bg-green-100 border border-green-400 text-green-700 rounded">
+                        Your message has been sent successfully!
+                      </div>
+                    )}
+                    {submitError && (
+                      <div className="p-4 mb-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                        {submitError}
+                      </div>
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label htmlFor="contact-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           Name
                         </label>
                         <input
                           type="text"
-                          id="name"
+                          id="contact-name"
+                          value={formData.name}
+                          onChange={handleInputChange}
                           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="Your name"
+                          required
                         />
                       </div>
                       <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label htmlFor="contact-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           Email
                         </label>
                         <input
                           type="email"
-                          id="email"
+                          id="contact-email"
+                          value={formData.email}
+                          onChange={handleInputChange}
                           className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="your.email@example.com"
+                          required
                         />
                       </div>
                     </div>
                     <div>
-                      <label htmlFor="subject" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label htmlFor="contact-subject" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Subject
                       </label>
                       <input
                         type="text"
-                        id="subject"
+                        id="contact-subject"
+                        value={formData.subject}
+                        onChange={handleInputChange}
                         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Message subject"
                       />
                     </div>
                     <div>
-                      <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label htmlFor="contact-message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Message
                       </label>
                       <textarea
-                        id="message"
+                        id="contact-message"
                         rows={5}
+                        value={formData.message}
+                        onChange={handleInputChange}
                         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Your message here..."
+                        required
                       ></textarea>
                     </div>
-                    <Button size="lg" className="w-full">
-                      Send Message
+                    <Button 
+                      type="submit" 
+                      size="lg" 
+                      className="w-full"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? 'Sending...' : 'Send Message'}
                     </Button>
                   </form>
                 </motion.div>
