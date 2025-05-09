@@ -147,10 +147,10 @@ const Hero = () => {
           className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20 text-center z-10 relative"
         >
           {[
-            { label: "Faster", value: "10x" },
-            { label: "Fewer errors", value: "90%" },
-            { label: "Early validation", value: "100%" },
-            { label: "Higher reliability", value: "High" },
+            { label: "Engineering time saved", value: "87.5%" },
+            { label: "Minimizes operational risk", value: "Less Risk" },
+            { label: "Faster project delivery", value: "2x" },
+            { label: "Cost reduction per project", value: "87.5%" },
           ].map((stat, index) => (
             <div key={index} className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
               <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{stat.value}</div>

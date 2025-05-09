@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useSwipeable } from "react-swipeable";
 import newsData from "@/data/news.json";
 
 // Define the type for a news item
@@ -15,17 +16,25 @@ interface NewsItem {
   image: string;
 }
 
-// Mock data for news stories was moved to data/news.json
+// Cast newsData to correct type to avoid 'never' type issues
+const typedNewsData = newsData as NewsItem[];
 
 const News = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
   const [visibleCards, setVisibleCards] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
+
+  // Check if we have news to display
+  const hasNews = typedNewsData.length > 0;
 
   // Determine number of visible cards based on screen size
   useEffect(() => {
     const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      
       if (window.innerWidth >= 1280) {
         setVisibleCards(3); // Desktop: 3 cards
       } else if (window.innerWidth >= 768) {
@@ -41,14 +50,14 @@ const News = () => {
   }, []);
 
   const nextSlide = () => {
-    const maxIndex = newsData.length - visibleCards;
+    const maxIndex = typedNewsData.length - visibleCards;
     setCurrentIndex((prevIndex) => 
       prevIndex >= maxIndex ? 0 : prevIndex + 1
     );
   };
 
   const prevSlide = () => {
-    const maxIndex = newsData.length - visibleCards;
+    const maxIndex = typedNewsData.length - visibleCards;
     setCurrentIndex((prevIndex) => 
       prevIndex === 0 ? maxIndex : prevIndex - 1
     );
@@ -61,6 +70,13 @@ const News = () => {
   const closeNewsDialog = () => {
     setSelectedNews(null);
   };
+
+  // Swipe handlers
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => nextSlide(),
+    onSwipedRight: () => prevSlide(),
+    trackMouse: false
+  });
 
   // Function to create placeholder for missing images
   const getImageUrl = (path: string) => {
@@ -82,6 +98,11 @@ const News = () => {
     window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank');
   };
 
+  // If no news, hide the section
+  if (!hasNews) {
+    return null;
+  }
+
   return (
     <section id="news" className="py-20 bg-white dark:bg-gray-900">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
@@ -98,16 +119,31 @@ const News = () => {
         {/* News Carousel */}
         <div className="relative px-4">
           <div 
-            ref={carouselRef} 
             className="overflow-hidden mx-auto max-w-7xl"
+            {...swipeHandlers}
+            ref={(el) => {
+              // Atribuir ao nosso ref
+              if (carouselRef.current !== el) {
+                carouselRef.current = el;
+              }
+              // Aplicar o ref do swipeHandlers se existir
+              if (swipeHandlers.ref) {
+                swipeHandlers.ref(el);
+              }
+            }}
           >
+            {isMobile && (
+              <p className="text-sm text-center text-gray-500 mb-4 dark:text-gray-400">
+                Deslize para navegar entre as notícias
+              </p>
+            )}
             <div 
-              className="flex flex-wrap md:flex-nowrap gap-8 transition-all duration-500"
+              className="flex gap-8 transition-all duration-500 ease-in-out"
               style={{
-                transform: `translateX(-${currentIndex * (100 / Math.max(1, newsData.length - (visibleCards - 1)))}%)`,
+                transform: `translateX(-${currentIndex * (100 / Math.max(1, typedNewsData.length - (visibleCards - 1)))}%)`,
               }}
             >
-              {newsData.map((news) => (
+              {typedNewsData.map((news) => (
                 <motion.div 
                   key={news.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -117,7 +153,9 @@ const News = () => {
                     visibleCards === 3 ? 'md:w-[32%]' : 
                     visibleCards === 2 ? 'md:w-[48%]' : 
                     'md:w-full'
-                  } bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden flex flex-col`}
+                  } bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden flex flex-col ${
+                    isMobile ? 'mx-auto max-w-md' : ''
+                  }`}
                 >
                   <div className="h-48 bg-blue-100 dark:bg-blue-900 relative">
                     <div className="absolute inset-0 flex items-center justify-center text-blue-500 dark:text-blue-300 text-lg font-semibold">

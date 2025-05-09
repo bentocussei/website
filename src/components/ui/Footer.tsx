@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import PartnersSponsors from "./PartnersSponsors";
 
 const Footer = () => {
   return (
@@ -63,54 +64,12 @@ const Footer = () => {
               <li className="text-gray-400">Artificial Intelligence (AI)</li>
               <li className="text-gray-400">Software Simulation</li>
               <li className="text-gray-400">Industrial Automation</li>
-              <li className="text-gray-400">AI Agents</li>
-              <li className="text-gray-400">Data-Driven Solutions</li>
             </ul>
           </div>
         </div>
 
         {/* Partners & Sponsors */}
-        <div className="mt-12 pt-6 border-t border-gray-800">
-          <div className="flex flex-col items-center">
-            <p className="text-gray-400 mb-4">
-              Proud member of SynerLeap, sponsored by ABB
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-8">
-              <a 
-                href="https://www.abb.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="block"
-              >
-                <div className="relative h-12 w-24 md:h-14 md:w-30 bg-white/5 p-2 rounded-md">
-                  <Image
-                    src="/img/ABB_logo.svg.png"
-                    alt="ABB Logo"
-                    fill
-                    style={{ objectFit: 'contain' }}
-                    className="filter"
-                  />
-                </div>
-              </a>
-              <a 
-                href="https://synerleap.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="block"
-              >
-                <div className="relative h-12 w-32 md:h-14 md:w-30 bg-white/5 p-2 rounded-md">
-                  <Image
-                    src="/img/SynerLeap-logo_400X200.png"
-                    alt="SynerLeap Logo"
-                    fill
-                    style={{ objectFit: 'contain' }}
-                    className="filter brightness-0 invert"
-                  />
-                </div>
-              </a>
-            </div>
-          </div>
-        </div>
+        <PartnersSponsors />
 
         <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-500 text-sm">
           <p>© {new Date().getFullYear()} Ratotecki Inc. All rights reserved.</p>

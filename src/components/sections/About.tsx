@@ -3,6 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
+import Image from "next/image";
 
 const About = () => {
   const [ref, inView] = useInView({
@@ -43,18 +44,12 @@ const About = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="relative h-[400px] overflow-hidden rounded-xl shadow-xl"
           >
-            <div className="absolute inset-0 bg-blue-600/10 flex items-center justify-center">
-              <div className="text-blue-600 dark:text-blue-400 text-4xl font-bold">
-                Virtual Twins & AI
-              </div>
-            </div>
-            {/* Replace with image component when available 
             <Image 
-              src="/about-image.jpg" 
-              alt="Smart Grid Technology" 
+              src="/img/smartGridsCodeGeneratorDiagram.gif" 
+              alt="Smart Grid Technology Virtual Twins and AI" 
               fill
-              className="object-cover"
-            /> */}
+              className="object-contain"
+            />
           </motion.div>
 
           {/* Descriptive text */}
@@ -77,7 +72,7 @@ const About = () => {
             </p>
 
             <div className="pt-6 flex flex-wrap gap-3">
-              {['Artificial Intelligence', 'Software Simulation', 'Automation', 'AI Agents', 'Data-Driven Solutions'].map((tag, index) => (
+              {['Artificial Intelligence', 'Software Simulation', 'Automation'].map((tag, index) => (
                 <span key={index} className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-sm">
                   {tag}
                 </span>
