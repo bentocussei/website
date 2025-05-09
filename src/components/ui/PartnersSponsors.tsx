@@ -35,7 +35,7 @@ const PartnersSponsors = () => {
         <p className="text-gray-400 mb-4 text-center text-lg">
           Sponsored by
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8 mb-10">
+        <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8 mb-8">
           {sponsors.map((sponsor) => (
             <a 
               key={sponsor.name}

@@ -149,7 +149,7 @@ const News = () => {
           >
             {isMobile && (
               <p className="text-sm text-center text-gray-500 mb-4 dark:text-gray-400 px-4">
-                Deslize para navegar entre as notícias
+                Swipe to navigate between news
               </p>
             )}
             <div 
