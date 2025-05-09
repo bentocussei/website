@@ -3,12 +3,18 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "./button";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useTheme } from "next-themes";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { theme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
 
@@ -32,6 +38,8 @@ const Navbar = () => {
     { name: "Contact", href: "#contact" },
   ];
 
+  const currentLogo = resolvedTheme === 'dark' ? "/img/ratotecki-logo-black.png" : "/img/ratotecki-logo-white.png";
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -46,9 +54,21 @@ const Navbar = () => {
           <div className="flex-shrink-0">
             <Link href="#">
               <div className="flex items-center">
-                <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              <h1 className="text-2xl font-bold text-black 
+                dark:text-white">
                   RATOTECKI
                 </h1>
+                {/* {mounted ? (
+                  <Image
+                    src={currentLogo}
+                    alt="Ratotecki Logo"
+                    width={110}
+                    height={24}
+                    priority
+                  />
+                ) : (
+                  <div style={{ width: 180, height: 40 }} />
+                )} */}
               </div>
             </Link>
           </div>

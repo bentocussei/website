@@ -12,7 +12,15 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo and description */}
           <div className="col-span-1 md:col-span-2">
-            <h2 className="text-2xl font-bold text-blue-400 mb-4">RATOTECKI</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">RATOTECKI</h2>
+            {/* <div className="mb-4">
+              <Image
+                src="/img/ratotecki-logo-black.png"
+                alt="Ratotecki Logo"
+                width={110}
+                height={24}
+              />
+            </div> */}
             <p className="text-gray-400 max-w-md mb-6">
               Transforming how protection and control systems are engineered in the power and energy sector with AI and virtual twins.
             </p>
