@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "./button";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import ThemeToggle from "./ThemeToggle";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -66,12 +66,12 @@ const Navbar = () => {
             ))}
             
             {/* Theme Toggle */}
-            {/* <ThemeToggle /> */}
+            <ThemeToggle />
           </nav>
 
           {/* Mobile toggle and theme */}
           <div className="md:hidden flex items-center space-x-2">
-            {/* <ThemeToggle /> */}
+            <ThemeToggle />
             
             <button
               className="text-gray-700 dark:text-gray-300 focus:outline-none"

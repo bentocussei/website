@@ -27,11 +27,11 @@ const About = () => {
           transition={{ duration: 0.8 }}
           className="flex flex-col items-center text-center mb-16"
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
+          <h2 className="text-3xl md:text-3xl font-bold mb-4 text-gray-900 dark:text-white">
             About Ratotecki
           </h2>
           <div className="w-20 h-1 bg-blue-600 mb-6"></div>
-          <p className="max-w-3xl text-xl text-gray-700 dark:text-gray-300">
+          <p className="max-w-3xl text-lg text-gray-700 dark:text-gray-300">
             Transforming how protection and control systems are engineered in the power and energy sector.
           </p>
         </motion.div>

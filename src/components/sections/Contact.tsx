@@ -79,11 +79,11 @@ const Contact = () => {
     <section id="contact" className="py-20 bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
+          <h2 className="text-3xl md:text-3xl font-bold mb-4 text-gray-900 dark:text-white">
             Contact Us
           </h2>
           <div className="w-20 h-1 bg-blue-600 mx-auto mb-6"></div>
-          <p className="max-w-3xl mx-auto text-xl text-gray-700 dark:text-gray-300">
+          <p className="max-w-3xl mx-auto text-lg text-gray-700 dark:text-gray-300">
           We look forward to discussing how Ratotecki can help optimize your systems with our AI platform and virtual twins.
           </p>
         </div>

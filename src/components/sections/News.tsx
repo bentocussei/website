@@ -35,12 +35,12 @@ const News = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
       
-      if (window.innerWidth >= 1280) {
-        setVisibleCards(3); // Desktop: 3 cards
-      } else if (window.innerWidth >= 768) {
-        setVisibleCards(2); // Tablet: 2 cards
-      } else {
-        setVisibleCards(1); // Mobile: 1 card
+      if (window.innerWidth >= 1280) { // Desktop grande / Laptop
+        setVisibleCards(3);
+      } else if (window.innerWidth >= 768) { // Tablet / Laptop menor
+        setVisibleCards(2);
+      } else { // Mobile
+        setVisibleCards(1);
       }
     };
 
@@ -49,18 +49,23 @@ const News = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Quando o número de cards visíveis mudar, assegure que o currentIndex é válido
+  useEffect(() => {
+    const maxIndex = Math.max(0, typedNewsData.length > 0 ? typedNewsData.length - visibleCards : 0);
+    if (currentIndex > maxIndex) {
+      setCurrentIndex(maxIndex);
+    }
+  }, [visibleCards, currentIndex, typedNewsData.length]);
+
   const nextSlide = () => {
-    const maxIndex = typedNewsData.length - visibleCards;
-    setCurrentIndex((prevIndex) => 
-      prevIndex >= maxIndex ? 0 : prevIndex + 1
-    );
+    if (!hasNews || typedNewsData.length <= visibleCards) return;
+    const maxIndex = Math.max(0, typedNewsData.length - visibleCards);
+    setCurrentIndex((prevIndex) => Math.min(prevIndex + 1, maxIndex));
   };
 
   const prevSlide = () => {
-    const maxIndex = typedNewsData.length - visibleCards;
-    setCurrentIndex((prevIndex) => 
-      prevIndex === 0 ? maxIndex : prevIndex - 1
-    );
+    if (!hasNews || typedNewsData.length <= visibleCards) return;
+    setCurrentIndex((prevIndex) => Math.max(prevIndex - 1, 0));
   };
 
   const openNewsDialog = (news: NewsItem) => {
@@ -103,8 +108,9 @@ const News = () => {
     if (visibleCards === 1) {
       return `translateX(-${currentIndex * 100}%)`;
     }
-    // No modo desktop, continuamos com a lógica anterior
-    return `translateX(-${currentIndex * (100 / Math.max(1, typedNewsData.length - (visibleCards - 1)))}%)`;
+    // No modo desktop/tablet, calculamos proporcionalmente
+    const itemWidth = visibleCards === 3 ? 33.33 : 50; // Largura aproximada de cada item em porcentagem
+    return `translateX(-${currentIndex * itemWidth}%)`;
   };
 
   // If no news, hide the section
@@ -114,21 +120,21 @@ const News = () => {
 
   return (
     <section id="news" className="py-20 bg-white dark:bg-gray-900">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
+      <div className="container mx-auto px-0 sm:px-6 lg:px-8 max-w-7xl">
+        <div className="text-center mb-12 px-4">
+          <h2 className="text-3xl md:text-3xl font-bold mb-4 text-gray-900 dark:text-white">
             Latest News
           </h2>
           <div className="w-20 h-1 bg-blue-600 mx-auto mb-6"></div>
-          <p className="max-w-3xl mx-auto text-xl text-gray-700 dark:text-gray-300">
+          <p className="max-w-3xl mx-auto text-lg text-gray-700 dark:text-gray-300">
             Stay updated with the latest developments and achievements at Ratotecki
           </p>
         </div>
 
         {/* News Carousel */}
-        <div className="relative px-4">
+        <div className="relative w-full overflow-hidden">
           <div 
-            className="overflow-hidden mx-auto max-w-7xl"
+            className="w-full"
             {...swipeHandlers}
             ref={(el) => {
               // Atribuir ao nosso ref
@@ -142,96 +148,120 @@ const News = () => {
             }}
           >
             {isMobile && (
-              <p className="text-sm text-center text-gray-500 mb-4 dark:text-gray-400">
+              <p className="text-sm text-center text-gray-500 mb-4 dark:text-gray-400 px-4">
                 Deslize para navegar entre as notícias
               </p>
             )}
             <div 
-              className="flex gap-8 transition-all duration-500 ease-in-out"
+              className="flex w-full"
               style={{
                 transform: calculateTransform(),
-                width: isMobile ? `${typedNewsData.length * 100}%` : 'auto'
+                width: isMobile ? `${typedNewsData.length * 100}%` : `${typedNewsData.length * (100 / visibleCards)}%`,
+                transition: 'transform 0.5s ease-in-out'
               }}
             >
-              {typedNewsData.map((news) => (
-                <motion.div 
-                  key={news.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className={`flex-shrink-0 ${
-                    isMobile ? 'w-full min-w-full' : 
-                    visibleCards === 3 ? 'w-[32%] min-w-[32%]' : 
-                    visibleCards === 2 ? 'w-[48%] min-w-[48%]' : 
-                    'w-full min-w-full'
-                  } bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden flex flex-col ${
-                    isMobile ? 'mx-auto max-w-md' : ''
-                  }`}
-                >
-                  <div className="h-48 bg-blue-100 dark:bg-blue-900 relative">
-                    <div className="absolute inset-0 flex items-center justify-center text-blue-500 dark:text-blue-300 text-lg font-semibold">
-                      {/* This would be an actual image in production */}
-                      {news.title}
-                    </div>
-                  </div>
-                  
-                  <div className="p-6 flex flex-col flex-grow">
-                    <span className="text-blue-600 dark:text-blue-400 text-sm font-medium mb-2">{news.date}</span>
-                    <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white line-clamp-2">{news.title}</h3>
-                    <p className="text-gray-700 dark:text-gray-300 mb-4 line-clamp-3 flex-grow">{news.summary}</p>
-                    
-                    <div className="flex justify-between items-center mt-2">
-                      <Button 
-                        variant="default" 
-                        size="sm"
-                        onClick={() => openNewsDialog(news)}
-                      >
-                        Read More
-                      </Button>
-                      
-                      <div className="flex space-x-2">
-                        <button 
-                          onClick={() => shareOnLinkedIn(news)} 
-                          className="text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
-                          aria-label="Share on LinkedIn"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                          </svg>
-                        </button>
-                        <button 
-                          onClick={() => shareOnTwitter(news)} 
-                          className="text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
-                          aria-label="Share on Twitter"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                          </svg>
-                        </button>
+              {typedNewsData.map((news) => {
+                const numNews = typedNewsData.length;
+                let dynamicStylesForCard: React.CSSProperties = {};
+
+                if (isMobile) {
+                  dynamicStylesForCard = {
+                    width: '98%', // Estilo mobile original para largura e margens
+                    marginLeft: '1%',
+                    marginRight: '1%',
+                    boxSizing: 'border-box',
+                  };
+                } else if (numNews > 0) {
+                  // Para desktop/tablet, cada card ocupa 1/N da largura do track (incluindo margens)
+                  const singleMarginPercentOfTrack = 0.5; // Equivalente a mx-[0.5%] do track
+                  const totalMarginPercentOfTrack = 2 * singleMarginPercentOfTrack;
+                  const cardInnerWidthPercentOfTrack = (100 / numNews) - totalMarginPercentOfTrack;
+
+                  dynamicStylesForCard = {
+                    width: `${cardInnerWidthPercentOfTrack}%`,
+                    minWidth: `${cardInnerWidthPercentOfTrack}%`, // Garante que o card não encolha demais
+                    marginLeft: `${singleMarginPercentOfTrack}%`,
+                    marginRight: `${singleMarginPercentOfTrack}%`,
+                    flexShrink: '0', // Essencial para que os cards não encolham
+                  };
+                }
+
+                return (
+                  <motion.div 
+                    key={news.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden flex flex-col" // Classes base, largura e margens agora no style
+                    style={dynamicStylesForCard}
+                  >
+                    <div className="h-48 bg-blue-100 dark:bg-blue-900 relative w-full">
+                      <div className="absolute inset-0 flex items-center justify-center text-blue-500 dark:text-blue-300 text-lg font-semibold">
+                        {/* This would be an actual image in production */}
+                        {news.title}
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                    
+                    <div className="p-6 flex flex-col flex-grow w-full">
+                      <span className="text-blue-600 dark:text-blue-400 text-sm font-medium mb-2">{news.date}</span>
+                      <h3 className="text-lg font-bold mb-2 text-gray-900 dark:text-white line-clamp-2 w-full">{news.title}</h3>
+                      <p className="text-gray-700 dark:text-gray-300 mb-4 line-clamp-3 flex-grow w-full">{news.summary}</p>
+                      
+                      <div className="flex justify-between items-center mt-2 w-full">
+                        <Button 
+                          variant="default" 
+                          size="sm"
+                          onClick={() => openNewsDialog(news)}
+                        >
+                          Read More
+                        </Button>
+                        
+                        <div className="flex space-x-2">
+                          <button 
+                            onClick={() => shareOnLinkedIn(news)} 
+                            className="text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
+                            aria-label="Share on LinkedIn"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                            </svg>
+                          </button>
+                          <button 
+                            onClick={() => shareOnTwitter(news)} 
+                            className="text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
+                            aria-label="Share on Twitter"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
 
           {/* Navigation Controls */}
           <div className="flex justify-center mt-8 space-x-4">
-            <button 
+            <button
               onClick={prevSlide}
-              className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
+              className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Previous slide"
+              disabled={currentIndex === 0 || typedNewsData.length <= visibleCards}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M15 18l-6-6 6-6" />
               </svg>
             </button>
             
-            <button 
+            <button
               onClick={nextSlide}
-              className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
+              className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Next slide"
+              disabled={currentIndex >= Math.max(0, typedNewsData.length - visibleCards) || typedNewsData.length <= visibleCards}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 18l6-6-6-6" />

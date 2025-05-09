@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, FormEvent } from "react";
+import React, { useState, FormEvent, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -21,6 +21,17 @@ const Hero = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    handleResize(); // Verificação inicial
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -87,13 +98,13 @@ const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="flex flex-col items-start space-y-6"
+            className={`flex flex-col items-start space-y-6 ${isMobile ? 'mx-auto text-center items-center' : ''}`}
           >
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight text-gray-900 dark:text-white">
+            <h1 className="text-3xl md:text-4xl lg:text-4xl font-bold leading-tight text-gray-900 dark:text-white">
             Bringing <span className="text-blue-600 dark:text-blue-400">Intelligence</span> to the Grid with AI and Virtual Twin.
             </h1>
             
-            <p className="text-xl text-gray-700 dark:text-gray-300 max-w-2xl">
+            <p className="text-lg text-gray-700 dark:text-gray-300 max-w-2xl">
               Our AI-powered platform enables engineers to select, configure, and validate Intelligent Electronic Devices (IEDs) up to 10x faster using virtual twins.
             </p>
             
@@ -115,28 +126,30 @@ const Hero = () => {
           </motion.div>
 
           {/* Illustration/Image */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="relative h-[400px] lg:h-[500px] flex items-center justify-center"
-          >
-            <div className="absolute w-[80%] h-[80%] bg-blue-500/10 dark:bg-blue-500/20 rounded-full blur-3xl"></div>
-            <div className="relative w-full h-full">
-              {/* Replace with a real company image when available */}
-              <div className="absolute inset-0 flex items-center justify-center text-6xl font-bold text-blue-600/20">
-                RATOTECKI
+          {!isMobile && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="relative h-[400px] lg:h-[500px] flex items-center justify-center"
+            >
+              <div className="absolute w-[80%] h-[80%] bg-blue-500/10 dark:bg-blue-500/20 rounded-full blur-3xl"></div>
+              <div className="relative w-full h-full">
+                {/* Replace with a real company image when available */}
+                <div className="absolute inset-0 flex items-center justify-center text-6xl font-bold text-blue-600/20">
+                  RATOTECKI
+                </div>
+                {/* Here we can put a real image, video, gif:
+                <Image 
+                  src="/hero-image.png" 
+                  alt="Ratotecki Control System" 
+                  fill
+                  className="object-contain"
+                  priority
+                /> */}
               </div>
-              {/* Here we can put a real image, video, gif:
-              <Image 
-                src="/hero-image.png" 
-                alt="Ratotecki Control System" 
-                fill
-                className="object-contain"
-                priority
-              /> */}
-            </div>
-          </motion.div>
+            </motion.div>
+          )}
         </div>
 
         {/* Stats or highlights strip */}

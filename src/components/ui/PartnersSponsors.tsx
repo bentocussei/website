@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import React from "react";
 import Image from "next/image";
@@ -9,16 +9,12 @@ const PartnersSponsors = () => {
       name: "ABB",
       logo: "/img/sponsors&partners/sponsors/ABB_logo.png",
       url: "https://www.abb.com",
-      width: 24,
-      height: 12,
       invert: false
     },
     {
       name: "SynerLeap",
       logo: "/img/sponsors&partners/sponsors/synerleap_logo_black.png",
       url: "https://synerleap.com",
-      width: 32,
-      height: 12,
       invert: true
     }
   ];
@@ -28,8 +24,6 @@ const PartnersSponsors = () => {
       name: "Innovation Factory",
       logo: "/img/sponsors&partners/partners/iF-Logo_white.webp",
       url: "https://innovationfactory.ca",
-      width: 32,
-      height: 12,
       invert: false
     }
   ];
@@ -38,10 +32,10 @@ const PartnersSponsors = () => {
     <div className="mt-12 pt-6 border-t border-gray-800">
       <div className="flex flex-col items-center">
         {/* Sponsors Section */}
-        <p className="text-gray-400 mb-4">
+        <p className="text-gray-400 mb-4 text-center text-lg">
           Sponsored by
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-8 mb-8">
+        <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8 mb-10">
           {sponsors.map((sponsor) => (
             <a 
               key={sponsor.name}
@@ -50,7 +44,7 @@ const PartnersSponsors = () => {
               rel="noopener noreferrer"
               className="block"
             >
-              <div className={`relative h-${sponsor.height} w-${sponsor.width} md:h-14 md:w-30 bg-white/5 p-2 rounded-md`}>
+              <div className="relative h-16 w-36 md:h-16 md:w-40 bg-white/5 p-3 rounded-md hover:bg-white/10 transition-colors">
                 <Image
                   src={sponsor.logo}
                   alt={`${sponsor.name} Logo`}
@@ -64,10 +58,10 @@ const PartnersSponsors = () => {
         </div>
 
         {/* Partners Section */}
-        <p className="text-gray-400 mb-4">
-          Our partners
+        <p className="text-gray-400 mb-4 text-center text-lg">
+          Nossos parceiros
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-8">
+        <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8">
           {partners.map((partner) => (
             <a 
               key={partner.name}
@@ -76,7 +70,7 @@ const PartnersSponsors = () => {
               rel="noopener noreferrer"
               className="block"
             >
-              <div className={`relative h-${partner.height} w-${partner.width} md:h-14 md:w-30 bg-white/5 p-2 rounded-md`}>
+              <div className="relative h-16 w-36 md:h-16 md:w-40 bg-white/5 p-3 rounded-md hover:bg-white/10 transition-colors">
                 <Image
                   src={partner.logo}
                   alt={`${partner.name} Logo`}
