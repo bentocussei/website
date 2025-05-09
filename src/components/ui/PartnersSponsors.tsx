@@ -44,7 +44,7 @@ const PartnersSponsors = () => {
               rel="noopener noreferrer"
               className="block"
             >
-              <div className="relative h-16 w-36 md:h-16 md:w-40 bg-white/5 p-3 rounded-md hover:bg-white/10 transition-colors">
+              <div className="relative h-6 w-20 md:h-8 md:w-24 bg-white/5 p-3 rounded-md hover:bg-white/10 transition-colors">
                 <Image
                   src={sponsor.logo}
                   alt={`${sponsor.name} Logo`}
@@ -59,7 +59,7 @@ const PartnersSponsors = () => {
 
         {/* Partners Section */}
         <p className="text-gray-400 mb-4 text-center text-lg">
-          Nossos parceiros
+          Partners
         </p>
         <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8">
           {partners.map((partner) => (
@@ -70,7 +70,7 @@ const PartnersSponsors = () => {
               rel="noopener noreferrer"
               className="block"
             >
-              <div className="relative h-16 w-36 md:h-16 md:w-40 bg-white/5 p-3 rounded-md hover:bg-white/10 transition-colors">
+              <div className="relative h-6 w-20 md:h-8 md:w-24 bg-white/5 p-3 rounded-md hover:bg-white/10 transition-colors">
                 <Image
                   src={partner.logo}
                   alt={`${partner.name} Logo`}
