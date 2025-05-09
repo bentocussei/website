@@ -98,6 +98,15 @@ const News = () => {
     window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank');
   };
 
+  const calculateTransform = () => {
+    // No modo mobile, queremos saltar 100% para cada card
+    if (visibleCards === 1) {
+      return `translateX(-${currentIndex * 100}%)`;
+    }
+    // No modo desktop, continuamos com a lógica anterior
+    return `translateX(-${currentIndex * (100 / Math.max(1, typedNewsData.length - (visibleCards - 1)))}%)`;
+  };
+
   // If no news, hide the section
   if (!hasNews) {
     return null;
@@ -140,7 +149,8 @@ const News = () => {
             <div 
               className="flex gap-8 transition-all duration-500 ease-in-out"
               style={{
-                transform: `translateX(-${currentIndex * (100 / Math.max(1, typedNewsData.length - (visibleCards - 1)))}%)`,
+                transform: calculateTransform(),
+                width: isMobile ? `${typedNewsData.length * 100}%` : 'auto'
               }}
             >
               {typedNewsData.map((news) => (
@@ -149,10 +159,11 @@ const News = () => {
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className={`flex-shrink-0 w-full ${
-                    visibleCards === 3 ? 'md:w-[32%]' : 
-                    visibleCards === 2 ? 'md:w-[48%]' : 
-                    'md:w-full'
+                  className={`flex-shrink-0 ${
+                    isMobile ? 'w-full min-w-full' : 
+                    visibleCards === 3 ? 'w-[32%] min-w-[32%]' : 
+                    visibleCards === 2 ? 'w-[48%] min-w-[48%]' : 
+                    'w-full min-w-full'
                   } bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden flex flex-col ${
                     isMobile ? 'mx-auto max-w-md' : ''
                   }`}
