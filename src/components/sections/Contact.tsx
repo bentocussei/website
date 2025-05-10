@@ -98,7 +98,7 @@ const Contact = () => {
                 </svg>
               </div>
               <h4 className="font-semibold text-gray-900 dark:text-white text-lg mb-1">Phone</h4>
-              <p className="text-gray-700 dark:text-gray-300 text-center">(+1) 416 555-5555</p>
+              <p className="text-gray-700 dark:text-gray-300 text-center">N/A</p>
             </div>
 
             <div className="flex flex-col items-center p-4 rounded-lg bg-gray-50 dark:bg-gray-700">
@@ -109,7 +109,7 @@ const Contact = () => {
                 </svg>
               </div>
               <h4 className="font-semibold text-gray-900 dark:text-white text-lg mb-1">Email</h4>
-              <p className="text-gray-700 dark:text-gray-300 text-center">contact@ratotecki.com</p>
+              <p className="text-gray-700 dark:text-gray-300 text-center">info@softadi.com</p>
             </div>
 
             <div className="flex flex-col items-center p-4 rounded-lg bg-gray-50 dark:bg-gray-700">
