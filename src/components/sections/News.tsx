@@ -170,14 +170,7 @@ const News = () => {
   }
   
   if (!hasNews && !isLoading) {
-    return (
-      <section id="news" className="py-20 bg-white dark:bg-gray-900">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-2xl font-semibold mb-4">No News Available</h2>
-          <p className="text-gray-700 dark:text-gray-300">Please check back later for updates.</p>
-        </div>
-      </section>
-    );
+    return null; // Retorna null para não renderizar a seção
   }
 
   return (
