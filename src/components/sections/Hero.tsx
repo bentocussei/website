@@ -108,7 +108,7 @@ const Hero = () => {
               Our AI-powered platform enables engineers to select, configure, and validate Intelligent Electronic Devices (IEDs) up to 10x faster using virtual twins.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 pt-6">
+            <div className={`flex sm:flex-row gap-4 pt-6 ${isMobile ? 'mx-auto' : ''}`}>
               <Button size="lg" onClick={() => setShowDemoForm(true)}>
                 Request a Demo
               </Button>
@@ -162,7 +162,7 @@ const Hero = () => {
           {[
             { label: "Engineering time saved", value: "87.5%" },
             { label: "Minimizes operational risk", value: "Less Risk" },
-            { label: "Faster project delivery", value: "2x" },
+            { label: "Faster project delivery", value: "8x" },
             { label: "Cost reduction per project", value: "87.5%" },
           ].map((stat, index) => (
             <div key={index} className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
