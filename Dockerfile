@@ -6,7 +6,6 @@ RUN npm install -g pnpm
 WORKDIR /app
 COPY package.json ./
 COPY prisma ./prisma
-COPY libs ./libs
 
 # Instalar dependências
 RUN pnpm install
