@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 // ATENÇÃO: Esta rota deve ser removida em produção
 // e usada apenas para criar o primeiro usuário administrador

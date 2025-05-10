@@ -2,7 +2,7 @@ import { NextAuthOptions, User as NextAuthUser, Account, Profile } from "next-au
 import { JWT } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { logActivity } from "@/lib/activityLogger";
 
 interface ExtendedNextAuthUser extends NextAuthUser {
