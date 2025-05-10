@@ -1,14 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getToken } from "next-auth/jwt";
+import { logActivity } from "@/lib/activityLogger";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || request.headers.get('x-real-ip') || null;
+  const userAgent = request.headers.get("user-agent") || null;
+
   try {
     const data = await request.json();
     const { name, email, subject, message } = data;
 
     // Validação básica
     if (!name || !email || !message) {
+      await logActivity({
+        action: "CONTACT_MESSAGE_VALIDATION_FAILED",
+        details: { error: "Name, email, and message are required fields.", payload: data },
+        ipAddress,
+        userAgent,
+      });
       return NextResponse.json(
         { error: "Name, email, and message are required fields." },
         { status: 400 }
@@ -26,6 +38,15 @@ export async function POST(request: Request) {
       },
     });
 
+    await logActivity({
+      action: "CONTACT_MESSAGE_CREATE_SUCCESS",
+      entityType: "ContactMessage",
+      entityId: newContactMessage.id,
+      details: { name, email, subject: newContactMessage.subject },
+      ipAddress,
+      userAgent,
+    });
+
     return NextResponse.json(
       {
         success: true,
@@ -36,8 +57,14 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     console.error("Error saving contact message:", error);
-    // Verificar se o erro é uma instância de Error para acessar a propriedade message
+    const dataForLogError = await request.json().catch(() => ({}));
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+    await logActivity({
+      action: "CONTACT_MESSAGE_CREATE_FAILED",
+      details: { error: errorMessage, payload: dataForLogError },
+      ipAddress,
+      userAgent,
+    });
     return NextResponse.json(
       { error: "Failed to send message. Please try again later.", details: errorMessage },
       { status: 500 }
@@ -46,9 +73,16 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: NextRequest) {
-  // Adicionar autenticação/autorização aqui (ex: verificar se é admin)
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-  if (!token || !token.isAdmin) {
+  const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || request.headers.get('x-real-ip') || null;
+  const userAgent = request.headers.get("user-agent") || null;
+
+  const session = await getServerSession(authOptions);
+  if (!(session?.user as any)?.isAdmin) {
+    await logActivity({
+      action: "CONTACT_MESSAGE_VIEW_UNAUTHORIZED",
+      ipAddress,
+      userAgent,
+    });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -58,11 +92,27 @@ export async function GET(request: NextRequest) {
         timestamp: "desc",
       },
     });
+
+    await logActivity({
+      userId: (session?.user as any)?.id,
+      action: "CONTACT_MESSAGE_VIEW_SUCCESS",
+      details: { count: messages.length },
+      ipAddress,
+      userAgent,
+    });
     return NextResponse.json({ messages }, { status: 200 });
   } catch (error) {
     console.error("Error fetching contact messages:", error);
+    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+    await logActivity({
+      userId: (session?.user as any)?.id,
+      action: "CONTACT_MESSAGE_VIEW_FAILED",
+      details: { error: errorMessage },
+      ipAddress,
+      userAgent,
+    });
     return NextResponse.json(
-      { error: "Failed to fetch messages." },
+      { error: "Failed to fetch messages.", details: errorMessage },
       { status: 500 }
     );
   }
