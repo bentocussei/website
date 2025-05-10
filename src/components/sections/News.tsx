@@ -4,30 +4,55 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useSwipeable } from "react-swipeable";
-import newsData from "@/data/news.json";
 
-// Define the type for a news item
+// Define the type for a news item (deve corresponder ao schema do Prisma e ao retorno da API)
 interface NewsItem {
-  id: number;
+  id: string; // Prisma usa string para UUIDs
   title: string;
-  date: string;
+  date: string; // Manter como string conforme schema, mas idealmente seria DateTime
   summary: string;
   content: string;
-  image: string;
+  image: string | null; // Permitir nulo conforme schema (image?)
+  createdAt: string; // Adicionar createdAt e updatedAt se precisar deles
+  updatedAt: string;
 }
 
-// Cast newsData to correct type to avoid 'never' type issues
-const typedNewsData = newsData as NewsItem[];
-
 const News = () => {
+  const [newsData, setNewsData] = useState<NewsItem[]>([]); // Estado para dados da API
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
   const [visibleCards, setVisibleCards] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
 
+  // Buscar dados da API ao montar o componente
+  useEffect(() => {
+    const fetchNews = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch('/api/news');
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to fetch news');
+        }
+        const data = await response.json();
+        setNewsData(data.news || []); // API retorna { news: [...] }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred while fetching news.');
+        setNewsData([]); // Limpar dados em caso de erro
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchNews();
+  }, []);
+
   // Check if we have news to display
-  const hasNews = typedNewsData.length > 0;
+  const hasNews = newsData.length > 0;
 
   // Determine number of visible cards based on screen size
   useEffect(() => {
@@ -51,20 +76,21 @@ const News = () => {
 
   // Quando o número de cards visíveis mudar, assegure que o currentIndex é válido
   useEffect(() => {
-    const maxIndex = Math.max(0, typedNewsData.length > 0 ? typedNewsData.length - visibleCards : 0);
+    if (newsData.length === 0) return; // Não fazer nada se não há dados
+    const maxIndex = Math.max(0, newsData.length > 0 ? newsData.length - visibleCards : 0);
     if (currentIndex > maxIndex) {
       setCurrentIndex(maxIndex);
     }
-  }, [visibleCards, currentIndex, typedNewsData.length]);
+  }, [visibleCards, currentIndex, newsData.length]);
 
   const nextSlide = () => {
-    if (!hasNews || typedNewsData.length <= visibleCards) return;
-    const maxIndex = Math.max(0, typedNewsData.length - visibleCards);
+    if (!hasNews || newsData.length <= visibleCards) return;
+    const maxIndex = Math.max(0, newsData.length - visibleCards);
     setCurrentIndex((prevIndex) => Math.min(prevIndex + 1, maxIndex));
   };
 
   const prevSlide = () => {
-    if (!hasNews || typedNewsData.length <= visibleCards) return;
+    if (!hasNews || newsData.length <= visibleCards) return;
     setCurrentIndex((prevIndex) => Math.max(prevIndex - 1, 0));
   };
 
@@ -84,10 +110,15 @@ const News = () => {
   });
 
   // Function to create placeholder for missing images
-  const getImageUrl = (path: string) => {
-    // In a real app, you'd return the actual path
-    // For this demo, we'll return a placeholder
-    return `https://placehold.co/400x300/2563eb/FFFFFF?text=${path.split('/').pop()?.split('.')[0] || 'placeholder'}`;
+  const getImageUrl = (imagePath: string | null, title: string) => {
+    if (imagePath) {
+      // Se imagePath for uma URL completa, use-a.
+      // Se for um caminho relativo, prefixe com o necessário (ex: /images/)
+      // Por enquanto, apenas retornando o caminho, assumindo que seja uma URL completa ou será tratado pelo componente Image do Next.js
+      return imagePath;
+    }
+    // Placeholder se não houver imagem
+    return `https://placehold.co/400x300/2563eb/FFFFFF?text=${encodeURIComponent(title.substring(0, 20))}`;
   };
 
   // Share functions
@@ -104,6 +135,7 @@ const News = () => {
   };
 
   const calculateTransform = () => {
+    if (newsData.length === 0) return 'translateX(0%)';
     // No modo mobile, queremos saltar 100% para cada card
     if (visibleCards === 1) {
       return `translateX(-${currentIndex * 100}%)`;
@@ -113,9 +145,39 @@ const News = () => {
     return `translateX(-${currentIndex * itemWidth}%)`;
   };
 
-  // If no news, hide the section
-  if (!hasNews) {
-    return null;
+  // If no news, and not loading and no error, hide the section or show a message
+  if (isLoading) {
+    return (
+      <section id="news" className="py-20 bg-white dark:bg-gray-900">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-2xl font-semibold mb-4">Loading News...</h2>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mx-auto"></div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section id="news" className="py-20 bg-white dark:bg-gray-900">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-2xl font-semibold text-red-600 mb-4">Error Loading News</h2>
+          <p className="text-gray-700 dark:text-gray-300">{error}</p>
+          <Button onClick={() => window.location.reload()} className="mt-4">Try Again</Button>
+        </div>
+      </section>
+    );
+  }
+  
+  if (!hasNews && !isLoading) {
+    return (
+      <section id="news" className="py-20 bg-white dark:bg-gray-900">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-2xl font-semibold mb-4">No News Available</h2>
+          <p className="text-gray-700 dark:text-gray-300">Please check back later for updates.</p>
+        </div>
+      </section>
+    );
   }
 
   return (
@@ -156,12 +218,12 @@ const News = () => {
               className="flex w-full"
               style={{
                 transform: calculateTransform(),
-                width: isMobile ? `${typedNewsData.length * 100}%` : `${typedNewsData.length * (100 / visibleCards)}%`,
+                width: isMobile ? `${newsData.length * 100}%` : `${newsData.length * (100 / visibleCards)}%`,
                 transition: 'transform 0.5s ease-in-out'
               }}
             >
-              {typedNewsData.map((news) => {
-                const numNews = typedNewsData.length;
+              {newsData.map((news) => {
+                const numNews = newsData.length;
                 let dynamicStylesForCard: React.CSSProperties = {};
 
                 if (isMobile) {
@@ -196,10 +258,18 @@ const News = () => {
                     style={dynamicStylesForCard}
                   >
                     <div className="h-48 bg-blue-100 dark:bg-blue-900 relative w-full">
-                      <div className="absolute inset-0 flex items-center justify-center text-blue-500 dark:text-blue-300 text-lg font-semibold">
-                        {/* This would be an actual image in production */}
-                        {news.title}
-                      </div>
+                      {/* Idealmente, usar o componente Next/Image aqui se 'news.image' for um caminho gerenciável pelo Next.js */}
+                      <img 
+                        src={getImageUrl(news.image, news.title)} 
+                        alt={news.title} 
+                        className="w-full h-full object-cover" 
+                        onError={(e) => { 
+                          // Em caso de erro ao carregar a imagem original, pode-se tentar um placeholder
+                          const target = e.target as HTMLImageElement;
+                          target.onerror = null; // Evitar loop infinito se o placeholder também falhar
+                          target.src = `https://placehold.co/400x300/2563eb/FFFFFF?text=${encodeURIComponent(news.title.substring(0,15))}`;
+                        }}
+                      />
                     </div>
                     
                     <div className="p-6 flex flex-col flex-grow w-full">
@@ -250,7 +320,7 @@ const News = () => {
               onClick={prevSlide}
               className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Previous slide"
-              disabled={currentIndex === 0 || typedNewsData.length <= visibleCards}
+              disabled={currentIndex === 0 || newsData.length <= visibleCards}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M15 18l-6-6 6-6" />
@@ -261,7 +331,7 @@ const News = () => {
               onClick={nextSlide}
               className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Next slide"
-              disabled={currentIndex >= Math.max(0, typedNewsData.length - visibleCards) || typedNewsData.length <= visibleCards}
+              disabled={currentIndex >= Math.max(0, newsData.length - visibleCards) || newsData.length <= visibleCards}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 18l6-6-6-6" />
@@ -318,10 +388,17 @@ const News = () => {
 
                   {/* News Hero Image */}
                   <div className="h-64 md:h-80 bg-blue-100 dark:bg-blue-900 mb-6 rounded-lg relative">
-                    <div className="absolute inset-0 flex items-center justify-center text-blue-500 dark:text-blue-300 text-2xl font-semibold">
-                      {/* This would be an actual image in production */}
-                      {selectedNews.title}
-                    </div>
+                    {/* Idealmente, usar o componente Next/Image aqui */}
+                    <img 
+                      src={getImageUrl(selectedNews.image, selectedNews.title)} 
+                      alt={selectedNews.title} 
+                      className="w-full h-full object-cover rounded-lg" 
+                      onError={(e) => { 
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null; 
+                        target.src = `https://placehold.co/800x400/2563eb/FFFFFF?text=${encodeURIComponent(selectedNews.title.substring(0,20))}`;
+                      }}
+                    />
                   </div>
 
                   {/* News Content */}

@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
-import fs from "fs/promises";
-import path from "path";
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getToken } from "next-auth/jwt";
 
 export async function POST(request: Request) {
   try {
@@ -10,70 +10,59 @@ export async function POST(request: Request) {
     // Validação básica
     if (!name || !email || !message) {
       return NextResponse.json(
-        { error: "Name, email, and message are required" },
+        { error: "Name, email, and message are required fields." },
         { status: 400 }
       );
     }
 
-    // Criando o objeto da mensagem
-    const newMessage = {
-      id: Date.now().toString(),
-      name,
-      email,
-      subject: subject || "", // Campo opcional
-      message,
-      timestamp: new Date().toISOString(),
-    };
+    // Opcional: Validação de email mais robusta aqui se necessário
 
-    // Caminho para o arquivo JSON
-    const filePath = path.join(process.cwd(), "data", "contact-messages.json");
-
-    // Ler o arquivo existente ou criar um novo array
-    let messages = [];
-    try {
-      const fileContent = await fs.readFile(filePath, "utf-8");
-      messages = JSON.parse(fileContent);
-    } catch (error) {
-      // Se o arquivo não existe ou não pode ser lido, começamos com um array vazio
-      console.log("Creating new contact messages file");
-    }
-
-    // Adicionar a nova mensagem
-    messages.push(newMessage);
-
-    // Salvar de volta ao arquivo
-    await fs.writeFile(filePath, JSON.stringify(messages, null, 2), "utf-8");
+    const newContactMessage = await prisma.contactMessage.create({
+      data: {
+        name,
+        email,
+        subject: subject || null, // Assunto é opcional no schema
+        message,
+      },
+    });
 
     return NextResponse.json(
-      { success: true, message: "Contact message saved successfully" },
+      {
+        success: true,
+        message: "Your message has been sent successfully!",
+        id: newContactMessage.id,
+      },
       { status: 201 }
     );
   } catch (error) {
     console.error("Error saving contact message:", error);
+    // Verificar se o erro é uma instância de Error para acessar a propriedade message
+    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
     return NextResponse.json(
-      { error: "Failed to save contact message" },
+      { error: "Failed to send message. Please try again later.", details: errorMessage },
       { status: 500 }
     );
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Adicionar autenticação/autorização aqui (ex: verificar se é admin)
+  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+  if (!token || !token.isAdmin) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
-    const filePath = path.join(process.cwd(), "data", "contact-messages.json");
-    
-    // Ler o arquivo existente ou retornar array vazio
-    try {
-      const fileContent = await fs.readFile(filePath, "utf-8");
-      const messages = JSON.parse(fileContent);
-      return NextResponse.json({ messages }, { status: 200 });
-    } catch (error) {
-      // Se o arquivo não existe, retornamos um array vazio
-      return NextResponse.json({ messages: [] }, { status: 200 });
-    }
+    const messages = await prisma.contactMessage.findMany({
+      orderBy: {
+        timestamp: "desc",
+      },
+    });
+    return NextResponse.json({ messages }, { status: 200 });
   } catch (error) {
-    console.error("Error reading contact messages:", error);
+    console.error("Error fetching contact messages:", error);
     return NextResponse.json(
-      { error: "Failed to read contact messages" },
+      { error: "Failed to fetch messages." },
       { status: 500 }
     );
   }

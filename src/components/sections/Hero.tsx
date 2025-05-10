@@ -42,25 +42,39 @@ const Hero = () => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitError('');
+    setSubmitSuccess(false); // Reset success state on new submission
 
     try {
       // Simple validation
       if (!demoFormData.name || !demoFormData.email) {
-        throw new Error('Please fill in all required fields');
+        throw new Error('Please fill in all required fields (Name and Email).');
       }
 
+      // Prepare data for API
+      const payload = {
+        name: demoFormData.name,
+        email: demoFormData.email,
+        companyName: demoFormData.company, // Mapeado de 'company' para 'companyName'
+        isDemoRequest: true, // Indicar que é um pedido de demo
+        // productName: "Virtual Twin Platform", // A API já define isso por padrão se isDemoRequest=true
+      };
+
       // Send data to API
-      const response = await fetch('/api/demo', {
+      const response = await fetch('/api/waiting-list', { // Endpoint atualizado
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(demoFormData),
+        body: JSON.stringify(payload), // Payload atualizado
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to submit request');
+        // A API de waiting-list retorna erro de conflito (409) se o email já existe.
+        if (response.status === 409) {
+          throw new Error(errorData.error || 'This email is already on the waiting list or has requested a demo.');
+        }
+        throw new Error(errorData.error || 'Failed to submit request. Please try again.');
       }
 
       // Show success and reset form
@@ -74,11 +88,11 @@ const Hero = () => {
       // Close form after a delay
       setTimeout(() => {
         setShowDemoForm(false);
-        setSubmitSuccess(false);
+        setSubmitSuccess(false); // Reset success state after closing
       }, 3000);
     } catch (error) {
       console.error('Error submitting form:', error);
-      setSubmitError(error instanceof Error ? error.message : 'An unknown error occurred');
+      setSubmitError(error instanceof Error ? error.message : 'An unknown error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -218,7 +232,7 @@ const Hero = () => {
                 <form className="space-y-6" onSubmit={handleSubmit}>
                   {submitSuccess && (
                     <div className="p-4 mb-4 bg-green-100 border border-green-400 text-green-700 rounded">
-                      Your demo request has been submitted successfully!
+                      Your demo request has been submitted successfully! We'll be in touch soon.
                     </div>
                   )}
                   {submitError && (
@@ -228,7 +242,7 @@ const Hero = () => {
                   )}
                   <div>
                     <label htmlFor="demo-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Name
+                      Full Name
                     </label>
                     <input
                       type="text"
@@ -242,7 +256,7 @@ const Hero = () => {
                   </div>
                   <div>
                     <label htmlFor="demo-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Email
+                      Business Email
                     </label>
                     <input
                       type="email"
@@ -256,7 +270,7 @@ const Hero = () => {
                   </div>
                   <div>
                     <label htmlFor="demo-company" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Company <span className="text-gray-500 dark:text-gray-400 text-sm font-normal">(optional)</span>
+                      Company Name <span className="text-gray-500 dark:text-gray-400 text-sm font-normal">(Optional)</span>
                     </label>
                     <input
                       type="text"
@@ -271,9 +285,9 @@ const Hero = () => {
                     type="submit" 
                     size="lg" 
                     className="w-full"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || submitSuccess} // Disable if submitting or on success
                   >
-                    {isSubmitting ? 'Submitting...' : 'Submit Request'}
+                    {isSubmitting ? 'Submitting...' : (submitSuccess ? 'Submitted!' : 'Submit Request')}
                   </Button>
                 </form>
               </motion.div>

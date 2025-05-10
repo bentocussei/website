@@ -49,6 +49,7 @@ const About = () => {
               alt="Smart Grid Technology Virtual Twins and AI" 
               fill
               className="object-contain"
+              unoptimized={true}
             />
           </motion.div>
 

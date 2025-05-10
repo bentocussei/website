@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import ScrollToTop from "@/components/ui/ScrollToTop";
 import "./globals.css";
 import { ThemeProvider } from "@/providers/theme-provider";
+import { SessionProvider } from "@/components/session-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,8 +36,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <ScrollToTop />
+          <SessionProvider>
+            {children}
+            <ScrollToTop />
+          </SessionProvider>
         </ThemeProvider>
       </body>
     </html>

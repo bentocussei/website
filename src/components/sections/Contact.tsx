@@ -32,11 +32,12 @@ const Contact = () => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitError('');
+    setSubmitSuccess(false);
 
     try {
       // Simple validation
       if (!formData.name || !formData.email || !formData.message) {
-        throw new Error('Please fill in all required fields');
+        throw new Error('Please fill in all required fields (Name, Email, and Message).');
       }
 
       // Send data to API
@@ -48,9 +49,10 @@ const Contact = () => {
         body: JSON.stringify(formData),
       });
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to submit form');
+        throw new Error(responseData.error || 'Failed to submit form. Please try again.');
       }
 
       // Show success and reset form
@@ -62,14 +64,15 @@ const Contact = () => {
         message: ''
       });
 
-      // Close form after a delay
+      // Consider not closing the form automatically, or give more time
+      // For now, keeping the existing behavior
       setTimeout(() => {
         setShowForm(false);
         setSubmitSuccess(false);
       }, 3000);
     } catch (error) {
       console.error('Error submitting form:', error);
-      setSubmitError(error instanceof Error ? error.message : 'An unknown error occurred');
+      setSubmitError(error instanceof Error ? error.message : 'An unknown error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -180,7 +183,7 @@ const Contact = () => {
                   <form className="space-y-6" onSubmit={handleSubmit}>
                     {submitSuccess && (
                       <div className="p-4 mb-4 bg-green-100 border border-green-400 text-green-700 rounded">
-                        Your message has been sent successfully!
+                        Your message has been sent successfully! We will get back to you soon.
                       </div>
                     )}
                     {submitError && (
@@ -249,9 +252,9 @@ const Contact = () => {
                       type="submit" 
                       size="lg" 
                       className="w-full"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || submitSuccess}
                     >
-                      {isSubmitting ? 'Sending...' : 'Send Message'}
+                      {isSubmitting ? 'Sending...' : (submitSuccess ? 'Sent!' : 'Send Message')}
                     </Button>
                   </form>
                 </motion.div>
