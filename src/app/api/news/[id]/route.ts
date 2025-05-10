@@ -7,19 +7,22 @@ import { logActivity } from "@/lib/activityLogger";
 // Obter uma notícia específica
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || request.headers.get('x-real-ip') || null;
   const userAgent = request.headers.get("user-agent") || null;
   let sessionUserId: string | undefined = undefined;
+  let newsIdFromRoute: string | undefined = undefined;
 
   try {
+    const routeParams = await params;
+    newsIdFromRoute = routeParams.id;
+
     const session = await getServerSession(authOptions);
     sessionUserId = (session?.user as any)?.id;
-    const { id } = params;
 
     const news = await prisma.news.findUnique({
-      where: { id },
+      where: { id: newsIdFromRoute },
     });
 
     if (!news) {
@@ -27,7 +30,7 @@ export async function GET(
         userId: sessionUserId,
         action: "NEWS_VIEW_NOT_FOUND",
         entityType: "News",
-        entityId: id,
+        entityId: newsIdFromRoute,
         ipAddress,
         userAgent,
       });
@@ -48,12 +51,12 @@ export async function GET(
     });
     return NextResponse.json({ news }, { status: 200 });
   } catch (error) {
-    console.error("Error fetching news by id:", error);
+    console.error(`Error fetching news by id (attempted id: ${newsIdFromRoute || 'unknown_id_due_to_param_error'}):`, error);
     await logActivity({
       userId: sessionUserId,
       action: "NEWS_VIEW_FAILED",
       entityType: "News",
-      entityId: params.id,
+      entityId: newsIdFromRoute || (await params.catch(()=>({id: "unknown_id_due_to_param_error"}))).id,
       details: { error: error instanceof Error ? error.message : String(error) },
       ipAddress,
       userAgent,
@@ -68,13 +71,17 @@ export async function GET(
 // Atualizar uma notícia específica (protegido, somente admin)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || request.headers.get('x-real-ip') || null;
   const userAgent = request.headers.get("user-agent") || null;
   let sessionUserId: string | undefined = undefined;
+  let newsIdFromRoute: string | undefined = undefined;
 
   try {
+    const routeParams = await params;
+    newsIdFromRoute = routeParams.id;
+
     const session = await getServerSession(authOptions);
     sessionUserId = (session?.user as any)?.id;
     const userIsAdmin = (session?.user as any)?.isAdmin;
@@ -83,7 +90,7 @@ export async function PUT(
       await logActivity({
         action: "NEWS_UPDATE_ATTEMPT_UNAUTHORIZED",
         entityType: "News",
-        entityId: params.id,
+        entityId: newsIdFromRoute,
         ipAddress,
         userAgent,
       });
@@ -93,12 +100,11 @@ export async function PUT(
       );
     }
 
-    const { id } = params;
     const data = await request.json();
     const { title, date, summary, content, image } = data;
 
     const existingNews = await prisma.news.findUnique({
-      where: { id },
+      where: { id: newsIdFromRoute },
     });
 
     if (!existingNews) {
@@ -106,7 +112,7 @@ export async function PUT(
         userId: sessionUserId,
         action: "NEWS_UPDATE_NOT_FOUND",
         entityType: "News",
-        entityId: id,
+        entityId: newsIdFromRoute,
         ipAddress,
         userAgent,
       });
@@ -117,7 +123,7 @@ export async function PUT(
     }
 
     const updatedNews = await prisma.news.update({
-      where: { id },
+      where: { id: newsIdFromRoute },
       data: {
         title: title !== undefined ? title : existingNews.title,
         date: date !== undefined ? date : existingNews.date,
@@ -142,13 +148,13 @@ export async function PUT(
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error updating news:", error);
-    const requestBodyForLog = await request.text();
+    console.error(`Error updating news (attempted id: ${newsIdFromRoute || 'unknown_id_due_to_param_error'}):`, error);
+    const requestBodyForLog = await request.text().catch(() => "Error reading request body");
     await logActivity({
       userId: sessionUserId,
       action: "NEWS_UPDATE_FAILED",
       entityType: "News",
-      entityId: params.id,
+      entityId: newsIdFromRoute || (await params.catch(()=>({id: "unknown_id_due_to_param_error"}))).id,
       details: { error: error instanceof Error ? error.message : String(error), payload: requestBodyForLog },
       ipAddress,
       userAgent,
@@ -163,13 +169,17 @@ export async function PUT(
 // Excluir uma notícia específica (protegido, somente admin)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || request.headers.get('x-real-ip') || null;
   const userAgent = request.headers.get("user-agent") || null;
   let sessionUserId: string | undefined = undefined;
+  let newsIdFromRoute: string | undefined = undefined;
 
   try {
+    const routeParams = await params;
+    newsIdFromRoute = routeParams.id;
+
     const session = await getServerSession(authOptions);
     sessionUserId = (session?.user as any)?.id;
     const userIsAdmin = (session?.user as any)?.isAdmin;
@@ -178,7 +188,7 @@ export async function DELETE(
       await logActivity({
         action: "NEWS_DELETE_ATTEMPT_UNAUTHORIZED",
         entityType: "News",
-        entityId: params.id,
+        entityId: newsIdFromRoute,
         ipAddress,
         userAgent,
       });
@@ -188,10 +198,8 @@ export async function DELETE(
       );
     }
 
-    const { id } = params;
-
     const existingNews = await prisma.news.findUnique({
-      where: { id },
+      where: { id: newsIdFromRoute },
     });
 
     if (!existingNews) {
@@ -199,7 +207,7 @@ export async function DELETE(
         userId: sessionUserId,
         action: "NEWS_DELETE_NOT_FOUND",
         entityType: "News",
-        entityId: id,
+        entityId: newsIdFromRoute,
         ipAddress,
         userAgent,
       });
@@ -210,14 +218,14 @@ export async function DELETE(
     }
 
     await prisma.news.delete({
-      where: { id },
+      where: { id: newsIdFromRoute },
     });
 
     await logActivity({
       userId: sessionUserId,
       action: "NEWS_DELETE",
       entityType: "News",
-      entityId: id,
+      entityId: newsIdFromRoute,
       details: { title: existingNews.title },
       ipAddress,
       userAgent,
@@ -228,12 +236,12 @@ export async function DELETE(
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error deleting news:", error);
+    console.error(`Error deleting news (attempted id: ${newsIdFromRoute || 'unknown_id_due_to_param_error'}):`, error);
     await logActivity({
       userId: sessionUserId,
       action: "NEWS_DELETE_FAILED",
       entityType: "News",
-      entityId: params.id,
+      entityId: newsIdFromRoute || (await params.catch(()=>({id: "unknown_id_due_to_param_error"}))).id,
       details: { error: error instanceof Error ? error.message : String(error) },
       ipAddress,
       userAgent,
